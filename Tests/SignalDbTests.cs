@@ -26,7 +26,7 @@ public class SignalDbTests(ITestOutputHelper output) : IDisposable {
 			var creationTime = new DateTime(2010, 1, 1, 1, 1, 1);
 			var signalMeta = new SignalMetaEntity() {
 				Name = "TestName",
-				CreationTime = creationTime,
+				CreationDate = creationTime,
 				ChunkSize = 1000
 			};
 
@@ -38,10 +38,10 @@ public class SignalDbTests(ITestOutputHelper output) : IDisposable {
 
 			var signal2 = await SignalMetaEntity.Create(new() {
 				Name = "SecondSignal",
-				CreationTime = creationTime,
+				CreationDate = creationTime,
 			}, db);
 
-			var amount = db.SignalsMeta.Where(meta => meta.CreationTime == creationTime).Count();
+			var amount = db.SignalsMeta.Where(meta => meta.CreationDate == creationTime).Count();
 
 			Assert.True(amount == 2);
 		}

@@ -1,10 +1,15 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using LiveChartsCore;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 using Points.Services.Database;
+using Points.Utils;
+using Points.Windows;
+using Points.Windows.SignalCreation;
+using Points.Windows.SignalSelection;
 using System;
 using System.Configuration;
 using System.Data;
@@ -52,7 +57,10 @@ namespace Points
 				options.UseSqlite("Data Source=signals.db")
 			);
 
-			
+			// Windows:
+			services.RegisterWindow<SignalSelectionWindow, SignalSelectionViewModel>();
+			services.RegisterWindow<SignalCreationWindow, SignalCreationViewModel>();
+
 			#endregion
 			serviceProvider = services.BuildServiceProvider();
 
@@ -62,7 +70,11 @@ namespace Points
 			} catch (Exception ex) {
 				CrashApplication("Database initialization failed", ex);
 			}
+
+			serviceProvider.GetRequiredService<SignalSelectionWindow>().Show();
 		}
+
+		
 
 		protected override async void OnExit(ExitEventArgs e) {
 			if (serviceProvider is not null)
