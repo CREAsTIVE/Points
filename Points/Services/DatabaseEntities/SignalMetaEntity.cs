@@ -19,7 +19,7 @@ public class SignalMetaEntity {
 	public string Name { get; set; } = string.Empty;
 
 	[Required]
-	public DateTime CreationTime { get; set; }
+	public DateTime CreationDate { get; set; }
 
 	/// <summary>
 	/// Time step between points
