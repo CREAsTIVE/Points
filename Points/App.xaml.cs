@@ -25,7 +25,7 @@ namespace Points
 
 		public void CrashApplication(string errorMessage, Exception details) {
 			globalLogger.Error(details);
-			MessageBox.Show(errorMessage, "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+			MessageBox.Show(errorMessage, "Critical error!", MessageBoxButton.OK, MessageBoxImage.Error);
 			Application.Current.Shutdown(); // should call OnExit();
 		}
 
@@ -58,12 +58,10 @@ namespace Points
 
 			try {
 				// Maybe async?
-				serviceProvider.GetService<IDbContextFactory<SignalDbContext>>()!.CreateDbContext().Database.Migrate();
+				serviceProvider.GetService<IDbContextFactory<SignalDbContext>>()!.CreateDbContext().Database.EnsureCreated();
 			} catch (Exception ex) {
 				CrashApplication("Database initialization failed", ex);
 			}
-
-
 		}
 
 		protected override async void OnExit(ExitEventArgs e) {

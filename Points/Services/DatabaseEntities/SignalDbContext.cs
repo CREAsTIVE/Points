@@ -8,6 +8,9 @@ namespace Points.Services.Database {
 	public class SignalDbContext(ILogger<SignalDbContext> logger, DbContextOptions<SignalDbContext> options) : DbContext(options) {
 		private readonly ILogger logger = logger;
 
+		public DbSet<SignalMetaEntity> SignalsMeta { get; set; } = null!;
+		public DbSet<SignalChunkEntity> Chunks { get; set; } = null!;
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder) {
 			modelBuilder.Entity<SignalChunkEntity>()
 				.HasKey(c => new { c.SignalID, c.ChunkID });
@@ -20,3 +23,6 @@ namespace Points.Services.Database {
 		}
 	}
 }
+
+
+ 

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Points": {
+      "commandName": "Project",
+      "sqlDebugging": false
+    }
+  }
+}
