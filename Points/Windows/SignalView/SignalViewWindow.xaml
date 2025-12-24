@@ -1,0 +1,30 @@
+﻿<Window x:Class="Points.Windows.SignalView.SignalViewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Points.Windows"
+        xmlns:lc ="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        mc:Ignorable="d"
+        Title="SignalViewWindow" Height="450" Width="800">
+
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar Header="Signal">
+                <Button ToolTip="Select signal..."/>
+            </ToolBar>
+        </ToolBarTray>
+        <lc:CartesianChart ZoomMode="X" >
+            <lc:CartesianChart.XAxes>
+                <lc:AxesCollection>
+                    <lc:XamlAxis MinLimit="{Binding VisibleMin, Mode=TwoWay}" MaxLimit="{Binding VisibleMax, Mode=TwoWay}"/>
+                </lc:AxesCollection>
+            </lc:CartesianChart.XAxes>
+            <lc:CartesianChart.Series>
+                <lc:SeriesCollection>
+                    <lc:XamlLineSeries Values="{Binding ChunkYValues}"/>
+                </lc:SeriesCollection>
+            </lc:CartesianChart.Series>
+        </lc:CartesianChart>
+    </DockPanel>
+</Window>

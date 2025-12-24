@@ -17,7 +17,7 @@
             VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5">
             <TextBlock>Создать новый...</TextBlock>
         </Button>
-        <ListBox Grid.Row="1" ItemsSource="{Binding Signals}" >
+        <ListBox Grid.Row="1" ItemsSource="{Binding Signals}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Margin="5">
@@ -26,6 +26,7 @@
                             <TextBlock Text="Создан: "/>
                             <TextBlock Text="{Binding Path=CreationTime}" />
                         </StackPanel>
+                        <Button Content="Open..." Command="{Binding DataContext.SelectSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

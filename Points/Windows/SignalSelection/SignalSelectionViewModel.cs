@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Points.Models;
 using Points.Services.Database;
 using Points.Windows.SignalCreation;
+using Points.Windows.SignalView;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,9 +18,11 @@ namespace Points.Windows.SignalSelection;
 public partial class SignalSelectionViewModel : ObservableObject {
 	IDbContextFactory<SignalDbContext> dbFactory;
 	Func<SignalCreationWindow> signalCreationWindowFactory;
-	public SignalSelectionViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalCreationWindow> signalCreationWindowFactory) {
+	Func<SignalViewWindow> signalViewWindowFactory;
+	public SignalSelectionViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalCreationWindow> signalCreationWindowFactory, Func<SignalViewWindow> signalViewWindowFactory) {
 		this.dbFactory = dbFactory;
 		this.signalCreationWindowFactory = signalCreationWindowFactory;
+		this.signalViewWindowFactory = signalViewWindowFactory;
 		_ = Load();
 	}
 
@@ -46,6 +49,10 @@ public partial class SignalSelectionViewModel : ObservableObject {
 
 	[RelayCommand]
 	void SelectSignal(SignalModel signal) {
+		var window = signalViewWindowFactory();
+		parentWindow?.Close();
 
+		((SignalViewViewModel)window.DataContext).SelectedSignal = signal;
+		window.Show();
 	}
 }

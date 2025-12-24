@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Points.Services.Database;
-using Points.Windows.SignalCreation;
-using Points.Windows.SignalSelection;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,17 +13,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace Points.Windows {
+namespace Points.Windows.SignalView {
 	/// <summary>
-	/// Interaction logic for SignalSelectionWindow.xaml
+	/// Interaction logic for SignalViewWindow.xaml
 	/// </summary>
-	public partial class SignalSelectionWindow : Window {
-		public SignalSelectionWindow(IServiceProvider serviceProvider) {
+	public partial class SignalViewWindow : Window {
+		public SignalViewWindow(IServiceProvider serviceProvider) {
 			InitializeComponent();
-
-			var dataContext = serviceProvider.GetRequiredService<SignalSelectionViewModel>(); ;
-			dataContext.parentWindow = this;
-			DataContext = dataContext;
+			DataContext = serviceProvider.GetRequiredService<SignalViewViewModel>();
 		}
-    }
+	}
 }

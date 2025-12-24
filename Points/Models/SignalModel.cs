@@ -44,14 +44,24 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 	public int ChunkAmount => TotalPoints / ChunkSize;
 	public int LastChunkAmount => TotalPoints % ChunkSize;
 
+	public async Task<List<float>> GetChunk(SignalDbContext db, int chunkID) {
+		var result = await db.Chunks
+			.Where(chunk => chunk.ChunkID == chunkID && chunk.SignalID == ID)
+			.Select(chunk => chunk.Data)
+			.FirstAsync();
+
+		return result.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList();
+	}
+
 	public async Task<List<List<float>>> GetChunks(SignalDbContext db, int from, int to) {
 		var result = await db.Chunks
 			.Where(chunk => chunk.SignalID == ID && chunk.ChunkID >= from && chunk.ChunkID < to)
 			.OrderBy(chunk => chunk.ChunkID)
 			.Select(chunk => chunk.Data)
-			.ToListAsync();
+			.ToListAsync(); // not required?
 
-		return [..result.Select(chunk => chunk.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList())];
+		// Remove overhead by writing it in plain loop
+		return [..result.Select(chunk => chunk.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
 	}
 
 	public async Task SetChunks(SignalDbContext db, ICollection<float> points) {
