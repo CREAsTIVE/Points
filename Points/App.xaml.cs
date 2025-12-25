@@ -1,6 +1,4 @@
-﻿using LiveChartsCore;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -11,11 +9,7 @@ using Points.Windows;
 using Points.Windows.SignalCreation;
 using Points.Windows.SignalSelection;
 using Points.Windows.SignalView;
-using System;
-using System.Configuration;
-using System.Data;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows;
 
 

@@ -1,19 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using LiveChartsCore.Defaults;
-using LiveChartsCore.Kernel;
-using LiveChartsCore.Kernel.Sketches;
-using LiveChartsCore.SkiaSharpView.WPF;
 using Microsoft.EntityFrameworkCore;
 using Points.Models;
 using Points.Services.Database;
 using Points.Utils;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ScottPlot;
+using ScottPlot.Plottables;
+using ScottPlot.WPF;
 
 namespace Points.Windows.SignalView; 
 public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFactory) : ObservableObject {
@@ -23,21 +15,22 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	[ObservableProperty]
 	ObservableChunkedList<float>? loadedChunks;
 
-	[ObservableProperty]
 	private double visibleMin = 0;
 	bool minUpdating = false;
 	int loadedChunkMin = 0;
 
-	[ObservableProperty]
 	private double visibleMax = 100;
 	bool maxUpdating = false;
 	int loadedChunkMax = 1;
 
-	partial void OnVisibleMinChanged(double value) {
-		if (selectedSignal is null) return;
+	public WpfPlot PlotControl { get; } = new();
+	Signal? currentPlot;
+
+	void OnVisibleMinChanged(double value) {
+		if (SelectedSignal is null) return;
 		if (minUpdating) return;
 		minUpdating = true;
-		_ = OnVisibleMinChangedAsync(selectedSignal, value);
+		_ = OnVisibleMinChangedAsync(SelectedSignal, value);
 	}
 
 	private async Task OnVisibleMinChangedAsync(SignalModel signal, double value) {
@@ -49,21 +42,23 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 					LoadedChunks.AddFrontChunk(await signal.GetChunk(db, i));
 				}
 			}
+			PlotControl.Refresh();
 		} else if (newMin > loadedChunkMin) {
 			for (int i = loadedChunkMin; i < newMin; i++) {
 				LoadedChunks.RemoveFrontChunk();
 			}
+			PlotControl.Refresh();
 		}
 
 		loadedChunkMin = newMin;
 		minUpdating = false;
 	}
 
-	partial void OnVisibleMaxChanged(double value) {
-		if (selectedSignal is null) return;
+	void OnVisibleMaxChanged(double value) {
+		if (SelectedSignal is null) return;
 		if (maxUpdating) return;
 		maxUpdating = true;
-		_ = OnVisibleMaxChangedAsync(selectedSignal, value);
+		_ = OnVisibleMaxChangedAsync(SelectedSignal, value);
 	}
 
 	private async Task OnVisibleMaxChangedAsync(SignalModel signal, double value) {
@@ -76,17 +71,20 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 					LoadedChunks.AddLastChunk(await signal.GetChunk(db, i));
 				}
 			}
+			PlotControl.Refresh();
 		} else if (newMax < loadedChunkMax) {
 			for (int i = loadedChunkMax; i > newMax; i--) {
 				LoadedChunks.RemoveLastChunk();
 			}
-		}
+			PlotControl.Refresh();
+		} 
 
 		loadedChunkMax = newMax;
+		if (currentPlot is not null) {
+			currentPlot.Data.XOffset = loadedChunkMin * signal.ChunkSize;
+		}
 		maxUpdating = false;
 	}
-
-	public Func<object, int, Coordinate> YValueMapping => (y, index) => new Coordinate(loadedChunkMin * (LoadedChunks?.ChunkSize ?? 1000) + index, (float)y);
 
 
 	partial void OnSelectedSignalChanged(SignalModel? value) {
@@ -95,9 +93,18 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 		
 	}
 	public async Task LoadSignal(SignalModel selectedSignal) {
+		PlotControl.Plot.Clear();
+
 		using (var db = await dbFactory.CreateDbContextAsync()) {
 			LoadedChunks = new(selectedSignal.ChunkSize);
 			LoadedChunks.AddFrontChunk(await selectedSignal.GetChunk(db, 0));
 		}
+
+		currentPlot = PlotControl.Plot.Add.Signal(LoadedChunks);
+
+		PlotControl.Plot.RenderManager.RenderStarting += (obj, e) => {
+			OnVisibleMinChanged(PlotControl.Plot.Axes.GetLimits().Left);
+			OnVisibleMaxChanged(PlotControl.Plot.Axes.GetLimits().Right);
+		};
 	}
 }

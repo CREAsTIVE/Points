@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,17 +12,17 @@ using System.Threading.Tasks;
 namespace Points.Utils; 
 public class ObservableChunkedList<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged {
 	private readonly ObservableCollection<List<T>> chunks = new();
+	public int ChunkCount => chunks.Count;
+
 	private readonly int chunkSize;
+	public int ChunkSize => chunkSize;
 
 	public ObservableChunkedList(int chunkSize) {
 		if (chunkSize <= 0) throw new ArgumentOutOfRangeException(nameof(chunkSize));
 		this.chunkSize = chunkSize;
 		chunks.CollectionChanged += OnChunksCollectionChanged;
 	}
-
-	public int ChunkSize => chunkSize;
-	public int ChunkCount => chunks.Count;
-
+	
 	public T this[int index] {
 		get {
 			if (index < 0 || index >= Count) throw new IndexOutOfRangeException();

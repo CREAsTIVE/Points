@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Points.Windows"
-        xmlns:lc ="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
         Title="SignalViewWindow" Height="450" Width="800">
 
@@ -14,17 +14,6 @@
                 <Button ToolTip="Select signal..."/>
             </ToolBar>
         </ToolBarTray>
-        <lc:CartesianChart ZoomMode="X">
-            <lc:CartesianChart.XAxes>
-                <lc:AxesCollection>
-                    <lc:XamlAxis x:Name="xAxis" PropertyChanged="XAxis_PropertyChanged"/>
-                </lc:AxesCollection>
-            </lc:CartesianChart.XAxes>
-            <lc:CartesianChart.Series>
-                <lc:SeriesCollection>
-                    <lc:XamlLineSeries Values="{Binding LoadedChunks}" Mapping="{Binding YValueMapping}"/>
-                </lc:SeriesCollection>
-            </lc:CartesianChart.Series>
-        </lc:CartesianChart>
+        <ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>
     </DockPanel>
 </Window>
