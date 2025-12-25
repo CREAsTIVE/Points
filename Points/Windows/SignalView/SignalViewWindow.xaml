@@ -18,9 +18,6 @@
                     <TextBlock>Открыть другой сигнал в новом окне</TextBlock>
                 </Button>
             </ToolBar>
-            <ToolBar Band="1" BandIndex="2" Header="Объеденить сигналы">
-                <Button>Сложить</Button>
-            </ToolBar>
         </ToolBarTray>
         <ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>
     </DockPanel>
