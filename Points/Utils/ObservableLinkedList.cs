@@ -23,6 +23,7 @@ public class ObservableLinkedList<T> : INotifyCollectionChanged, IEnumerable<T> 
 	public LinkedListNode<T>? Last {
 		get { return underLyingLinkedList.Last; }
 	}
+
 	#endregion
 
 	#region Constructors
@@ -150,6 +151,10 @@ public class ObservableLinkedList<T> : INotifyCollectionChanged, IEnumerable<T> 
 
 	public IEnumerator GetEnumerator() {
 		return underLyingLinkedList.GetEnumerator();
+	}
+
+	public void Add(T item) {
+		throw new NotImplementedException();
 	}
 
 	#endregion

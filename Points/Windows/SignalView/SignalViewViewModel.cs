@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore.Defaults;
+using LiveChartsCore.Kernel;
 using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView.WPF;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,7 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	SignalModel? selectedSignal;
 
 	[ObservableProperty]
-	ObservableLinkedList<List<float>> loadedChunks = new();
+	ObservableChunkedList<float>? loadedChunks;
 
 	[ObservableProperty]
 	private double visibleMin = 0;
@@ -40,16 +41,17 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	}
 
 	private async Task OnVisibleMinChangedAsync(SignalModel signal, double value) {
-		var newMin = (int)Math.Min(value / signal.ChunkSize, 0);
+		if (LoadedChunks is null) return;
+		var newMin = (int)Math.Max(value / signal.ChunkSize, 0);
 		if (newMin < loadedChunkMin) {
 			for (int i = newMin; i < loadedChunkMin; i++) {
 				using (var db = dbFactory.CreateDbContext()) {
-					LoadedChunks.AddFirst(await signal.GetChunk(db, i));
+					LoadedChunks.AddFrontChunk(await signal.GetChunk(db, i));
 				}
 			}
 		} else if (newMin > loadedChunkMin) {
 			for (int i = loadedChunkMin; i < newMin; i++) {
-				LoadedChunks.RemoveFirst();
+				LoadedChunks.RemoveFrontChunk();
 			}
 		}
 
@@ -65,16 +67,18 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	}
 
 	private async Task OnVisibleMaxChangedAsync(SignalModel signal, double value) {
-		var newMax = (int)Math.Max(value / signal.ChunkSize, signal.ChunkAmount - 1);
+		if (LoadedChunks is null) return;
+
+		var newMax = (int)Math.Min(value / signal.ChunkSize + 1, signal.ChunkAmount - 1);
 		if (newMax > loadedChunkMax) {
 			for (int i = loadedChunkMax + 1; i <= newMax; i++) {
 				using (var db = dbFactory.CreateDbContext()) {
-					LoadedChunks.AddLast(await signal.GetChunk(db, i));
+					LoadedChunks.AddLastChunk(await signal.GetChunk(db, i));
 				}
 			}
 		} else if (newMax < loadedChunkMax) {
 			for (int i = loadedChunkMax; i > newMax; i--) {
-				LoadedChunks.RemoveLast();
+				LoadedChunks.RemoveLastChunk();
 			}
 		}
 
@@ -82,11 +86,7 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 		maxUpdating = false;
 	}
 
-	partial void OnLoadedChunksChanged(ObservableLinkedList<List<float>> value) {
-		OnPropertyChanged(nameof(ChunkYValues));
-	}
-
-	public IEnumerable<ObservablePoint> ChunkYValues => LoadedChunks.SelectMany(v => v).Select((v, i) => new ObservablePoint(i, v));
+	public Func<object, int, Coordinate> YValueMapping => (y, index) => new Coordinate(loadedChunkMin * (LoadedChunks?.ChunkSize ?? 1000) + index, (float)y);
 
 
 	partial void OnSelectedSignalChanged(SignalModel? value) {
@@ -96,7 +96,8 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	}
 	public async Task LoadSignal(SignalModel selectedSignal) {
 		using (var db = await dbFactory.CreateDbContextAsync()) {
-			LoadedChunks = new(await selectedSignal.GetChunks(db, 0, 1));
+			LoadedChunks = new(selectedSignal.ChunkSize);
+			LoadedChunks.AddFrontChunk(await selectedSignal.GetChunk(db, 0));
 		}
 	}
 }

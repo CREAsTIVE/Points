@@ -14,15 +14,15 @@
                 <Button ToolTip="Select signal..."/>
             </ToolBar>
         </ToolBarTray>
-        <lc:CartesianChart ZoomMode="X" >
+        <lc:CartesianChart ZoomMode="X">
             <lc:CartesianChart.XAxes>
                 <lc:AxesCollection>
-                    <lc:XamlAxis MinLimit="{Binding VisibleMin, Mode=TwoWay}" MaxLimit="{Binding VisibleMax, Mode=TwoWay}"/>
+                    <lc:XamlAxis x:Name="xAxis" PropertyChanged="XAxis_PropertyChanged"/>
                 </lc:AxesCollection>
             </lc:CartesianChart.XAxes>
             <lc:CartesianChart.Series>
                 <lc:SeriesCollection>
-                    <lc:XamlLineSeries Values="{Binding ChunkYValues}"/>
+                    <lc:XamlLineSeries Values="{Binding LoadedChunks}" Mapping="{Binding YValueMapping}"/>
                 </lc:SeriesCollection>
             </lc:CartesianChart.Series>
         </lc:CartesianChart>

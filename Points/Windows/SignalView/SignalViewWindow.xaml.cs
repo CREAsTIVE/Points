@@ -1,8 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LiveChartsCore;
+using LiveChartsCore.Kernel;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.WPF;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Points.Services.Database;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +25,18 @@ namespace Points.Windows.SignalView {
 	public partial class SignalViewWindow : Window {
 		public SignalViewWindow(IServiceProvider serviceProvider) {
 			InitializeComponent();
-			DataContext = serviceProvider.GetRequiredService<SignalViewViewModel>();
+			var dataContext = serviceProvider.GetRequiredService<SignalViewViewModel>(); ;
+			DataContext = dataContext;
+		}
+
+		// Binding not working, so we do it manually
+		private void XAxis_PropertyChanged(object? sender, PropertyChangedEventArgs e) { 
+			if (e.PropertyName is nameof(Axis.MinLimit) or nameof(Axis.MaxLimit)) { 
+				if (DataContext is SignalViewViewModel vm) {
+					vm.VisibleMin = xAxis.MinLimit ?? 0;
+					vm.VisibleMax = xAxis.MaxLimit ?? 100;
+				}
+			}
 		}
 	}
 }
