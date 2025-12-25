@@ -13,15 +13,35 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <StackPanel>
-            <local:SignalCreationFieldControl Caption="Название">
-                <TextBox Text="{Binding DataContext.CurrentSignalModel.Name, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <StackPanel>
+                <local:SignalCreationFieldControl Caption="Название">
+                    <TextBox Text="{Binding CurrentSignalModel.Name}"/>
+                </local:SignalCreationFieldControl>
+                <local:SignalCreationFieldControl Caption="Количество точек">
+                    <TextBox Text="{Binding CurrentSignalModel.TotalPoints}"/>
+                </local:SignalCreationFieldControl>
+                <local:SignalCreationFieldControl Caption="Временной шаг">
+                    <TextBox Text="{Binding CurrentSignalModel.TimeStep}"/>
+                </local:SignalCreationFieldControl>
+            </StackPanel>
+            <local:SignalCreationFieldControl Caption="Пресет">
+                <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name, Mode=OneTime}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </local:SignalCreationFieldControl>
-            <local:SignalCreationFieldControl Caption="Количество точек">
-                <TextBox Text="{Binding DataContext.CurrentSignalModel.TotalPoints, RelativeSource={RelativeSource AncestorType=Window}}"/>
-            </local:SignalCreationFieldControl>
-            <local:SignalCreationFieldControl Caption="Временной шаг">
-                <TextBox Text="{Binding DataContext.CurrentSignalModel.TimeStep, RelativeSource={RelativeSource AncestorType=Window}}"/>
-            </local:SignalCreationFieldControl>
+            <ListBox HorizontalContentAlignment="Stretch" ItemsSource="{Binding SelectedPreset.Parameters}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <local:SignalCreationFieldControl Caption="{Binding Name, Mode=OneTime}">
+                            <ContentControl Content="{Binding Content, Mode=OneTime}"/>
+                        </local:SignalCreationFieldControl>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </StackPanel>
         <Button 
             Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" 

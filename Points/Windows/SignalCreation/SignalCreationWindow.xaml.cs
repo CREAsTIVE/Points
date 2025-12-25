@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Points.Models;
 using Points.Services.Database;
+using Points.Windows.SignalCreation.Presets;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

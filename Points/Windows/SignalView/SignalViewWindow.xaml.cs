@@ -8,7 +8,8 @@ namespace Points.Windows.SignalView {
 	public partial class SignalViewWindow : Window {
 		public SignalViewWindow(IServiceProvider serviceProvider) {
 			InitializeComponent();
-			var dataContext = serviceProvider.GetRequiredService<SignalViewViewModel>(); ;
+			var dataContext = serviceProvider.GetRequiredService<SignalViewViewModel>();
+			dataContext.parentWindow = this;
 			DataContext = dataContext;
 		}
 	}

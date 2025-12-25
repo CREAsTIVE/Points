@@ -23,7 +23,7 @@ public partial class SignalSelectionViewModel : ObservableObject {
 		this.dbFactory = dbFactory;
 		this.signalCreationWindowFactory = signalCreationWindowFactory;
 		this.signalViewWindowFactory = signalViewWindowFactory;
-		_ = Load();
+		_ = LoadSignals();
 	}
 
 	[ObservableProperty]
@@ -32,7 +32,7 @@ public partial class SignalSelectionViewModel : ObservableObject {
 	[ObservableProperty]
 	SignalModel? selectedSignal = null;
 
-	public async Task Load() {
+	public async Task LoadSignals() {
 		using (var db = dbFactory.CreateDbContext()) {
 			Signals = new((await db.SignalsMeta.Select(meta => meta).ToListAsync()).Select(entity => new SignalModel(entity)));
 		}
@@ -54,5 +54,14 @@ public partial class SignalSelectionViewModel : ObservableObject {
 
 		((SignalViewViewModel)window.DataContext).SetSignal(signal);
 		window.Show();
+	}
+
+	[RelayCommand]
+	async Task DeleteSignal(SignalModel signal) {
+		using (var db = await dbFactory.CreateDbContextAsync()) {
+			db.SignalsMeta.Remove(signal.entity);
+			await db.SaveChangesAsync();
+			await LoadSignals();
+		}
 	}
 }

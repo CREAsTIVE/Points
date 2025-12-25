@@ -26,11 +26,16 @@ namespace Points.Windows.SignalCreation {
 			InitializeComponent();
 		}
 
-		[ObservableProperty]
-        string caption = "Caption";
+		public static readonly DependencyProperty CaptionProperty =
+			DependencyProperty.Register(nameof(Caption), typeof(string), typeof(SignalCreationFieldControl), new PropertyMetadata(nameof(Caption)));
+
+		public string Caption {
+			get => (string)GetValue(CaptionProperty);
+			set => SetValue(CaptionProperty, value);
+		}
 
         public static readonly DependencyProperty InputControlProperty = 
-            DependencyProperty.Register("InputControl", typeof(FrameworkElement), typeof(SignalCreationFieldControl), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(InputControl), typeof(FrameworkElement), typeof(SignalCreationFieldControl), new PropertyMetadata(null));
 
         public FrameworkElement InputControl
         {

@@ -76,12 +76,12 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		return [..result.Select(chunk => chunk.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
 	}
 
-	public async Task SetChunks(IDbContextFactory<SignalDbContext> dbContextFactory, ICollection<float> points) {
+	public async Task SetChunks(IDbContextFactory<SignalDbContext> dbContextFactory, IEnumerable<float> points, int count) {
 		using (var db = await dbContextFactory.CreateDbContextAsync()) {
-			await SetChunks(db, points);
+			await SetChunks(db, points, count);
 		}
 	}
-	public async Task SetChunks(SignalDbContext db, ICollection<float> points) {
+	public async Task SetChunks(SignalDbContext db, IEnumerable<float> points, int count) {
 		db.Chunks.AddRange(
 			points.EnumerableChunk(ChunkSize).Select((chunk, index) => new SignalChunkEntity() {
 				SignalID = ID,
@@ -90,7 +90,7 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 			})
 		);
 
-		TotalPoints = points.Count;
+		TotalPoints = count;
 		await entity.Update(db);
 
 		await db.SaveChangesAsync();

@@ -9,11 +9,17 @@
         Title="SignalViewWindow" Height="450" Width="800">
 
     <DockPanel>
-        <ToolBarTray DockPanel.Dock="Top">
+        <ToolBarTray DockPanel.Dock="Top" >
             <ToolBar Band="1" BandIndex="1" Header="Сигналы">
-                <Button>
-                    <TextBlock>Выбрать сигнал...</TextBlock>
+                <Button Command="{Binding OpenOtherSignalCommand}">
+                    <TextBlock>Открыть другой сигнал</TextBlock>
                 </Button>
+                <Button Command="{Binding OpenOtherSignalThisWindowCommand}">
+                    <TextBlock>Открыть другой сигнал в новом окне</TextBlock>
+                </Button>
+            </ToolBar>
+            <ToolBar Band="1" BandIndex="2" Header="Объеденить сигналы">
+                <Button>Сложить</Button>
             </ToolBar>
         </ToolBarTray>
         <ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>

@@ -26,7 +26,10 @@
                             <TextBlock Text="Создан: "/>
                             <TextBlock Text="{Binding Path=CreationTime}" />
                         </StackPanel>
-                        <Button Content="Open..." Command="{Binding DataContext.SelectSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Выбрать" Command="{Binding DataContext.SelectSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                            <Button Content="Удалить" Command="{Binding DataContext.DeleteSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                        </StackPanel>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

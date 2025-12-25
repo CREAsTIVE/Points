@@ -1,14 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Points.Models;
 using Points.Services.Database;
 using Points.Utils;
+using Points.Windows.SignalSelection;
 using ScottPlot;
 using ScottPlot.Plottables;
 using ScottPlot.WPF;
+using System.Windows;
 
 namespace Points.Windows.SignalView; 
-public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFactory) : ObservableObject {
+public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalSelectionWindow> signalSelectionWindowFactory) : ObservableObject {
 	SignalModel? signal;
 
 	[ObservableProperty]
@@ -28,7 +31,7 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 
 		bool updateChart = false;
 
-		var newMin = (int) Math.Max(value / signal.ChunkSize + 0.001, 0); // + 0.001 for float point error fix
+		var newMin = (int) Math.Clamp(value / signal.ChunkSize + 0.001, 0, signal.ChunkAmount - 1); // + 0.001 for float point error fix
 
 		if (newMin < leftBorderCurrentChunk) {
 			for (int i = newMin; i < leftBorderCurrentChunk; i++) {
@@ -69,7 +72,7 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 
 		bool updateChart = false;
 
-		var newMax = (int) Math.Min(value / signal.ChunkSize + 1 + 0.001, signal.ChunkAmount);
+		var newMax = (int) Math.Clamp(value / signal.ChunkSize + 1 + 0.001, 0, signal.ChunkAmount - 1);
 
 		if (newMax > rightBorderCurrentChunk) {
 			for (int i = rightBorderCurrentChunk + 1; i <= newMax; i++) {
@@ -117,5 +120,19 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 		};
 
 		currentPlot.Data.Period = signal.TimeStep;
+	}
+
+	// Bad practice
+	public required Window parentWindow;
+
+	[RelayCommand]
+	public void OpenOtherSignal() {
+		OpenOtherSignalThisWindow();
+		parentWindow.Close();
+	}
+
+	[RelayCommand]
+	public void OpenOtherSignalThisWindow() {
+		signalSelectionWindowFactory().Show();
 	}
 }
