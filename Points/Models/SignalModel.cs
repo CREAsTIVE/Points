@@ -44,6 +44,12 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 	public int ChunkAmount => TotalPoints / ChunkSize;
 	public int LastChunkAmount => TotalPoints % ChunkSize;
 
+	public async Task<List<float>> GetChunk(IDbContextFactory<SignalDbContext> dbFactory, int chunkID) {
+		using (var db = await dbFactory.CreateDbContextAsync()) {
+			return await GetChunk(db, chunkID);
+		}
+	}
+
 	public async Task<List<float>> GetChunk(SignalDbContext db, int chunkID) {
 		var result = await db.Chunks
 			.Where(chunk => chunk.ChunkID == chunkID && chunk.SignalID == ID)
@@ -53,9 +59,15 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		return result.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList();
 	}
 
-	public async Task<List<List<float>>> GetChunks(SignalDbContext db, int from, int to) {
+	public async Task<List<List<float>>> GetChunks(IDbContextFactory<SignalDbContext> dbFactory, int chunkIDFrom, int chunkIDTo) {
+		using (var db = await dbFactory.CreateDbContextAsync()) {
+			return await GetChunks(db, chunkIDFrom, chunkIDTo);
+		}
+	}
+
+	public async Task<List<List<float>>> GetChunks(SignalDbContext db, int chunkIDFrom, int chunkIDTo) {
 		var result = await db.Chunks
-			.Where(chunk => chunk.SignalID == ID && chunk.ChunkID >= from && chunk.ChunkID < to)
+			.Where(chunk => chunk.SignalID == ID && chunk.ChunkID >= chunkIDFrom && chunk.ChunkID < chunkIDTo)
 			.OrderBy(chunk => chunk.ChunkID)
 			.Select(chunk => chunk.Data)
 			.ToListAsync(); // not required?
@@ -64,6 +76,11 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		return [..result.Select(chunk => chunk.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
 	}
 
+	public async Task SetChunks(IDbContextFactory<SignalDbContext> dbContextFactory, ICollection<float> points) {
+		using (var db = await dbContextFactory.CreateDbContextAsync()) {
+			await SetChunks(db, points);
+		}
+	}
 	public async Task SetChunks(SignalDbContext db, ICollection<float> points) {
 		db.Chunks.AddRange(
 			points.EnumerableChunk(ChunkSize).Select((chunk, index) => new SignalChunkEntity() {

@@ -10,8 +10,10 @@
 
     <DockPanel>
         <ToolBarTray DockPanel.Dock="Top">
-            <ToolBar Header="Signal">
-                <Button ToolTip="Select signal..."/>
+            <ToolBar Band="1" BandIndex="1" Header="Сигналы">
+                <Button>
+                    <TextBlock>Выбрать сигнал...</TextBlock>
+                </Button>
             </ToolBar>
         </ToolBarTray>
         <ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>

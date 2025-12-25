@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Points.Windows.SignalCreation; 
-public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> dbContext) : ObservableObject {
+public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> dbFactory) : ObservableObject {
 	[ObservableProperty]
 	SignalModel currentSignalModel = new(new() {
 		Name = "Новый сигнал",
@@ -25,10 +25,8 @@ public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> 
 	[RelayCommand]
 	public async Task CreateSignal() {
 		CurrentSignalModel.CreationTime = DateTime.Now;
-		var result = await SignalMetaEntity.Create(CurrentSignalModel.entity, dbContext);
-		using (var db = await dbContext.CreateDbContextAsync()) {
-			await CurrentSignalModel.SetChunks(db, Enumerable.Range(0, CurrentSignalModel.TotalPoints).Select(_ => Random.Shared.NextSingle()*2-1).ToList());
-		}
+		var result = await SignalMetaEntity.Create(CurrentSignalModel.entity, dbFactory);
+		await CurrentSignalModel.SetChunks(dbFactory, Enumerable.Range(0, CurrentSignalModel.TotalPoints).Select(_ => Random.Shared.NextSingle()*2-1).ToList());
 
 		baseWindow?.Created();
 	}

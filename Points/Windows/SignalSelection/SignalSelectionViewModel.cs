@@ -52,7 +52,7 @@ public partial class SignalSelectionViewModel : ObservableObject {
 		var window = signalViewWindowFactory();
 		parentWindow?.Close();
 
-		((SignalViewViewModel)window.DataContext).SelectedSignal = signal;
+		((SignalViewViewModel)window.DataContext).SetSignal(signal);
 		window.Show();
 	}
 }

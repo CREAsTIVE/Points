@@ -10,17 +10,16 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Points.Utils; 
-public class ObservableChunkedList<T> : IReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged {
+public class ChunkedList<T> : IReadOnlyList<T> {
 	private readonly ObservableCollection<List<T>> chunks = new();
 	public int ChunkCount => chunks.Count;
 
 	private readonly int chunkSize;
 	public int ChunkSize => chunkSize;
 
-	public ObservableChunkedList(int chunkSize) {
+	public ChunkedList(int chunkSize) {
 		if (chunkSize <= 0) throw new ArgumentOutOfRangeException(nameof(chunkSize));
 		this.chunkSize = chunkSize;
-		chunks.CollectionChanged += OnChunksCollectionChanged;
 	}
 	
 	public T this[int index] {
@@ -37,7 +36,7 @@ public class ObservableChunkedList<T> : IReadOnlyList<T>, INotifyCollectionChang
 		chunks.Add(chunk);
 	}
 
-	public void AddFrontChunk(List<T> chunk) {
+	public void AddFirstChunk(List<T> chunk) {
 		if (chunk == null || chunk.Count > chunkSize) throw new ArgumentException("Invalid chunk");
 		chunks.Insert(0, chunk);
 	}
@@ -47,7 +46,7 @@ public class ObservableChunkedList<T> : IReadOnlyList<T>, INotifyCollectionChang
 		chunks.RemoveAt(chunks.Count - 1);
 	}
 
-	public void RemoveFrontChunk() {
+	public void RemoveFirstChunk() {
 		if (chunks.Count == 0) return;
 		chunks.RemoveAt(0);
 	}
@@ -65,26 +64,4 @@ public class ObservableChunkedList<T> : IReadOnlyList<T>, INotifyCollectionChang
 	}
 
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-	public event NotifyCollectionChangedEventHandler? CollectionChanged;
-	public event PropertyChangedEventHandler? PropertyChanged;
-
-	private void OnChunksCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) {
-		NotifyCollectionChangedEventArgs args = e.Action switch {
-			// Better (e.NewItems as List<List<T>>).First()
-			NotifyCollectionChangedAction.Add => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, e.NewItems?[0], e.NewStartingIndex * chunkSize),
-			NotifyCollectionChangedAction.Remove => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, e.OldItems?[0], e.OldStartingIndex * chunkSize),
-			NotifyCollectionChangedAction.Reset => new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset),
-
-			// Warning! Not implemented
-			NotifyCollectionChangedAction.Replace => e,
-			NotifyCollectionChangedAction.Move => e,
-
-			_ => throw new NotImplementedException(), // Warn supression
-		};
-
-		CollectionChanged?.Invoke(this, args);
-
-		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-	}
 }
