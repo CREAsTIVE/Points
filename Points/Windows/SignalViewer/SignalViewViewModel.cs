@@ -64,6 +64,7 @@ public partial class SignalViewViewModel : ObservableObject {
 	int leftBorderLoadedChunk = 0;
 	int leftBorderScreenChunk = 0;
 
+	// TODO: Move every modification on its own thread and fix race condition with that (commit c64e3836f038cac4ee6e9dfe6b7c83f61f1b550f)
 	private async Task UpdateLeftBorder() {
 		if (leftBorderLock) return;
 		leftBorderLock = true;
@@ -78,42 +79,41 @@ public partial class SignalViewViewModel : ObservableObject {
 
 		while (leftBorderScreenChunk < leftBorderLoadedChunk) { // may continue over one frame, need all other checks after
 			// logger.LogDebug($"Left border far away, fetching chunk {leftBorderCurrentChunk - 1}");
+			var chunk = await Task.Run(() => Signal.GetChunk(dbFactory, leftBorderLoadedChunk - 1));
 
-			
-			await Task.Run(async () => {
-				var chunk = await Signal.GetChunk(dbFactory, leftBorderLoadedChunk - 1);
+			// Add chunk before
+			// TODO: a lot of computation for 1000+ chunks there cause AddFirst does a lot of copies.
+			// See ChunkedList for more info
+			LoadedChunks.AddFirstChunk(chunk);
+			leftBorderLoadedChunk--;
+			plot.Data.XOffset = leftBorderLoadedChunk * Signal.ChunkSize * Signal.TimeStep;
 
-				// Add chunk before
-				// TODO: a lot of computation for 1000+ chunks there cause AddFirst does a lot of copies.
-				// See ChunkedList for more info
-				LoadedChunks.AddFirstChunk(chunk);
+			_ = Task.Run(() => {
 				plotControl.Refresh();
-
-				leftBorderLoadedChunk--;
-
-				plot.Data.XOffset = leftBorderLoadedChunk * Signal.ChunkSize * Signal.TimeStep;
 			});
 
-			leftBorderScreenChunk = GetNewLeftBorder();
+			leftBorderScreenChunk = GetNewLeftBorder(); // Recalculate newMin after Task.Run
 		}
 
 		if (leftBorderScreenChunk > leftBorderLoadedChunk) { // done in one frame
+			leftBorderScreenChunk = Math.Min(leftBorderScreenChunk, rightBorderScreenChunk);
+
+			// EDGE-CASE: when left border goes over right border and vice versa
+			// it should delete only existing chunks
+			int amount = Math.Min(leftBorderScreenChunk - leftBorderLoadedChunk, LoadedChunks.ChunkCount);
 			await Task.Run(() => {
-				leftBorderScreenChunk = Math.Min(leftBorderScreenChunk, rightBorderScreenChunk);
-
-				// EDGE-CASE: when left border goes over right border and vice versa
-				// it should delete only existing chunks
-				int amount = Math.Min(leftBorderScreenChunk - leftBorderLoadedChunk, LoadedChunks.ChunkCount);
 				LoadedChunks.RemoveFirstNChunks(amount);
-
+				
 				leftBorderLoadedChunk = leftBorderScreenChunk;
-
-				plot.Data.XOffset = leftBorderLoadedChunk * Signal.ChunkSize * Signal.TimeStep;
-				plotControl.Refresh();
 
 				// EDGE-CASE: and move other border with itself
 				rightBorderLoadedChunk = Math.Max(rightBorderLoadedChunk, leftBorderLoadedChunk);
+
+				plot.Data.XOffset = leftBorderLoadedChunk * Signal.ChunkSize * Signal.TimeStep;
 			}); 
+			_ = Task.Run(() => {
+				plotControl.Refresh();
+			});
 		}
 
 		leftBorderLock = false;
@@ -139,31 +139,26 @@ public partial class SignalViewViewModel : ObservableObject {
 
 		while (rightBorderScreenChunk > rightBorderLoadedChunk) { // TODO: cut rightBorderCurrentChunk if leftBorderCurrentChunk passed it (and vice versa)
 			// logger.LogDebug($"Right border far away, fetching chunk {leftBorderCurrentChunk}");
+			var chunk = await Task.Run(() => Signal.GetChunk(dbFactory, rightBorderLoadedChunk));
 
-			await Task.Run(async () => {
-				var chunk = await Signal.GetChunk(dbFactory, rightBorderLoadedChunk);
+			LoadedChunks.AddLastChunk(chunk);
+			rightBorderLoadedChunk++;
 
-				LoadedChunks.AddLastChunk(chunk);
-				plotControl.Refresh();
-
-				rightBorderLoadedChunk++;
-			});
+			_ = Task.Run(plotControl.Refresh);
 
 			rightBorderScreenChunk = getNewRightBorder();
 		}
 
 		if (rightBorderScreenChunk < rightBorderLoadedChunk) {
-			await Task.Run(() => {
-				rightBorderScreenChunk = Math.Max(leftBorderScreenChunk, rightBorderScreenChunk);
+			rightBorderScreenChunk = Math.Max(leftBorderScreenChunk, rightBorderScreenChunk);
 
-				int amount = Math.Min(rightBorderLoadedChunk - rightBorderScreenChunk, LoadedChunks.ChunkCount);
-				LoadedChunks.RemoveLastNChunks(amount);
+			int amount = Math.Min(rightBorderLoadedChunk - rightBorderScreenChunk, LoadedChunks.ChunkCount);
+			await Task.Run(() => LoadedChunks.RemoveLastNChunks(amount));
+			// logger.LogDebug($"Right border far away, destroyed {amount} chunks");
+			rightBorderLoadedChunk = rightBorderScreenChunk;
+			leftBorderLoadedChunk = Math.Min(leftBorderLoadedChunk, rightBorderLoadedChunk);
 
-				rightBorderLoadedChunk = rightBorderScreenChunk;
-				leftBorderLoadedChunk = Math.Min(leftBorderLoadedChunk, rightBorderLoadedChunk);
-
-				plotControl.Refresh();
-			});
+			_ = Task.Run(plotControl.Refresh);
 		}
 
 		rightBorderLock = false;
