@@ -6,6 +6,12 @@ using System.Text;
 
 namespace Points.Services.Database; 
 public class SignalChunkEntity {
+	// Warn: do NOT change that without changing database handling
+	/// <summary>
+	/// Amount of bytes one point occupies
+	/// </summary>
+	public const int PointSize = sizeof(float);
+
 	[Key]
 	[Column(Order = 0)]
 	public int SignalID { get; set; }

@@ -56,7 +56,7 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 			.Select(chunk => chunk.Data)
 			.FirstAsync();
 
-		return result.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList();
+		return result.Chunk(SignalChunkEntity.PointSize).Select(bytes => BitConverter.ToSingle(bytes)).ToList();
 	}
 
 	public async Task<List<List<float>>> GetChunks(IDbContextFactory<SignalDbContext> dbFactory, int chunkIDFrom, int chunkIDTo) {
@@ -73,26 +73,48 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 			.ToListAsync(); // not required?
 
 		// Remove overhead by writing it in plain loop
-		return [..result.Select(chunk => chunk.Chunk(4).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
+		return [..result.Select(chunk => chunk.Chunk(SignalChunkEntity.PointSize).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
 	}
 
-	public async Task SetChunks(IDbContextFactory<SignalDbContext> dbContextFactory, IEnumerable<float> points, int count) {
-		using (var db = await dbContextFactory.CreateDbContextAsync()) {
-			await SetChunks(db, points, count);
-		}
+	public async Task SetPoints(IDbContextFactory<SignalDbContext> dbContextFactory, IAsyncEnumerable<float> points, Func<int, Task>? chunkSetUpdate = null) {
+		using var db = await dbContextFactory.CreateDbContextAsync();
+		await SetPoints(db, points, chunkSetUpdate);
 	}
-	public async Task SetChunks(SignalDbContext db, IEnumerable<float> points, int count) {
-		db.Chunks.AddRange(
-			points.EnumerableChunk(ChunkSize).Select((chunk, index) => new SignalChunkEntity() {
-				SignalID = ID,
-				ChunkID = index,
-				Data = chunk.Select(f => BitConverter.GetBytes(f)).SelectMany(v => v).ToArray()
-			})
-		);
+
+	/// <summary>
+	/// Clears and sets all points to a target <paramref name="points"/>
+	/// </summary>
+	/// <param name="points">Finite point enumerable</param>
+	/// <param name="chunkSetUpdate">get called when new chunk is created with created chunk ID</param>
+	public async Task SetPoints(SignalDbContext db, IAsyncEnumerable<float> points, Func<int, Task>? chunkSetUpdate = null) {
+		db.Chunks.RemoveRange(db.Chunks.Where(c => c.SignalID == ID));
+
+		int count = 0; // total amount of points added
+		await using var pointsEnumerator = points.GetAsyncEnumerator();
+		SignalChunkEntity entity = null!; // Initialized at first iteration
+
+		while (await pointsEnumerator.MoveNextAsync()) {
+			if (count % ChunkSize == 0) {
+				entity = new() {
+					ChunkID = count / ChunkSize,
+					SignalID = ID,
+					Data = new byte[ChunkSize * SignalChunkEntity.PointSize]
+				};
+
+				db.Add(entity);
+				_ = chunkSetUpdate?.Invoke(count / ChunkSize);
+			}
+
+			var bytes = BitConverter.GetBytes(pointsEnumerator.Current); // TODO: Manual conversation to avoid allocation
+			entity.Data[(count % ChunkSize) * SignalChunkEntity.PointSize] = bytes[0];
+			entity.Data[(count % ChunkSize) * SignalChunkEntity.PointSize + 1] = bytes[1];
+			entity.Data[(count % ChunkSize) * SignalChunkEntity.PointSize + 2] = bytes[2];
+			entity.Data[(count % ChunkSize) * SignalChunkEntity.PointSize + 3] = bytes[3];
+
+			count++;
+		}
 
 		TotalPoints = count;
-		await entity.Update(db);
-
 		await db.SaveChangesAsync();
 	}
 }

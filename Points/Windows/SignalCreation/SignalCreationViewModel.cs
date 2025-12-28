@@ -35,7 +35,7 @@ public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> 
 		CurrentSignalModel.CreationTime = DateTime.Now;
 		var result = await SignalMetaEntity.Create(CurrentSignalModel.entity, dbFactory);
 		// await CurrentSignalModel.SetChunks(dbFactory, Enumerable.Range(0, CurrentSignalModel.TotalPoints).Select(_ => Random.Shared.NextSingle()*2-1).ToList());
-		await CurrentSignalModel.SetChunks(dbFactory, SelectedPreset.GetPoints((float)CurrentSignalModel.TimeStep, CurrentSignalModel.TotalPoints), CurrentSignalModel.TotalPoints);
+		await CurrentSignalModel.SetPoints(dbFactory, SelectedPreset.GetPoints((float)CurrentSignalModel.TimeStep, CurrentSignalModel.TotalPoints), CurrentSignalModel.TotalPoints);
 
 		var window = signalViewWindowFactory();
 		((SignalViewViewModel)window.DataContext).SetSignal(new(result));
