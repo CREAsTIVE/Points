@@ -8,7 +8,7 @@ using Points.Utils;
 using Points.Windows;
 using Points.Windows.SignalCreation;
 using Points.Windows.SignalSelection;
-using Points.Windows.SignalView;
+using Points.Windows.SignalViewer;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -55,7 +55,7 @@ namespace Points
 			// Windows:
 			services.RegisterWindow<SignalSelectionWindow, SignalSelectionViewModel>();
 			services.RegisterWindow<SignalCreationWindow, SignalCreationViewModel>();
-			services.RegisterWindow<SignalViewWindow, SignalViewViewModel>();
+			services.RegisterWindow<SignalViewerWindow, SignalViewerViewModel>();
 
 			#endregion
 			serviceProvider = services.BuildServiceProvider();

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Points.Models;
 using Points.Services.Database;
 using Points.Windows.SignalCreation.Presets;
-using Points.Windows.SignalView;
+using Points.Windows.SignalViewer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ using System.Windows;
 using System.Windows.Threading;
 
 namespace Points.Windows.SignalCreation; 
-public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalViewWindow> signalViewWindowFactory) : ObservableObject {
+public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalViewerWindow> signalViewWindowFactory) : ObservableObject {
 	[ObservableProperty]
 	SignalModel currentSignalModel = new(new() {
 		Name = "Новый сигнал",
@@ -43,7 +43,7 @@ public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> 
 
 	[RelayCommand]
 	public async Task CreateSignal() {
-		CurrentSignalModel.CreationTime = DateTime.Now;
+		CurrentSignalModel.CreationDate = DateTime.Now;
 		var result = await SignalMetaEntity.Create(CurrentSignalModel.entity, dbFactory);
 		// await CurrentSignalModel.SetChunks(dbFactory, Enumerable.Range(0, CurrentSignalModel.TotalPoints).Select(_ => Random.Shared.NextSingle()*2-1).ToList());
 
@@ -62,10 +62,6 @@ public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> 
 
 		CreationState = "Открытие";
 
-		var window = signalViewWindowFactory();
-		((SignalViewViewModel)window.DataContext).SetSignal(new(result));
-		window.Show();
-
-		baseWindow?.Created();
+		baseWindow?.Created(new(result));
 	}
 }

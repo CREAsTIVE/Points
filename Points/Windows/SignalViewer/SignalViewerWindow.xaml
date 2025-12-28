@@ -1,4 +1,4 @@
-﻿<Window x:Class="Points.Windows.SignalView.SignalViewWindow"
+﻿<Window x:Class="Points.Windows.SignalViewer.SignalViewerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,10 +11,10 @@
     <DockPanel>
         <ToolBarTray DockPanel.Dock="Top" >
             <ToolBar Band="1" BandIndex="1" Header="Сигналы">
-                <Button Command="{Binding OpenOtherSignalCommand}">
+                <Button Command="{Binding OpenOtherSignalThisWindowCommand}">
                     <TextBlock>Открыть другой сигнал</TextBlock>
                 </Button>
-                <Button Command="{Binding OpenOtherSignalThisWindowCommand}">
+                <Button Command="{Binding OpenOtherSignalNewWindowCommand}">
                     <TextBlock>Открыть другой сигнал в новом окне</TextBlock>
                 </Button>
             </ToolBar>

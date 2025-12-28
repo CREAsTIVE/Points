@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Points.Models;
-public class SignalModel(SignalMetaEntity entity) : ObservableObject {
+public class SignalModel(SignalMetaEntity entity) : ObservableObject, ISignalMeta {
 	public readonly SignalMetaEntity entity = entity;
 
 	public int ID => entity.ID;
@@ -21,7 +21,7 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		get => entity.Name;
 		set => SetProperty(entity.Name, value, entity, (u, n) => u.Name = n);
 	}
-	public DateTime CreationTime {
+	public DateTime CreationDate {
 		get => entity.CreationDate;
 		set => SetProperty(entity.CreationDate, value, entity, (e, v) => e.CreationDate = v);
 	}

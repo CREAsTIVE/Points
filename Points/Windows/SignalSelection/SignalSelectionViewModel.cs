@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Points.Models;
 using Points.Services.Database;
 using Points.Windows.SignalCreation;
-using Points.Windows.SignalView;
+using Points.Windows.SignalViewer;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,11 +18,18 @@ namespace Points.Windows.SignalSelection;
 public partial class SignalSelectionViewModel : ObservableObject {
 	IDbContextFactory<SignalDbContext> dbFactory;
 	Func<SignalCreationWindow> signalCreationWindowFactory;
-	Func<SignalViewWindow> signalViewWindowFactory;
-	public SignalSelectionViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalCreationWindow> signalCreationWindowFactory, Func<SignalViewWindow> signalViewWindowFactory) {
+	Func<SignalViewerWindow> signalViewWindowFactory;
+	public SignalSelectionViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalCreationWindow> signalCreationWindowFactory, Func<SignalViewerWindow> signalViewWindowFactory) {
 		this.dbFactory = dbFactory;
 		this.signalCreationWindowFactory = signalCreationWindowFactory;
 		this.signalViewWindowFactory = signalViewWindowFactory;
+
+		OnSignalSelect = (signal) => {
+			var window = signalViewWindowFactory();
+			((SignalViewerViewModel)window.DataContext).AddSignal(signal);
+			window.Show();
+		};
+
 		_ = LoadSignals();
 	}
 
@@ -31,6 +38,9 @@ public partial class SignalSelectionViewModel : ObservableObject {
 
 	[ObservableProperty]
 	SignalModel? selectedSignal = null;
+
+	[ObservableProperty]
+	Action<SignalModel> onSignalSelect = delegate { };
 
 	public async Task LoadSignals() {
 		using (var db = dbFactory.CreateDbContext()) {
@@ -43,17 +53,15 @@ public partial class SignalSelectionViewModel : ObservableObject {
 	[RelayCommand]
 	void OpenCreateSignalWindow() {
 		var window = signalCreationWindowFactory();
-		window.OnCreated += () => parentWindow?.Close();
+		window.OnCreated += (signal) => SelectSignal(signal);
 		window.ShowDialog();
 	}
 
 	[RelayCommand]
 	void SelectSignal(SignalModel signal) {
-		var window = signalViewWindowFactory();
-		parentWindow?.Close();
+		OnSignalSelect(signal);
 
-		((SignalViewViewModel)window.DataContext).SetSignal(signal);
-		window.Show();
+		parentWindow?.Close();
 	}
 
 	[RelayCommand]

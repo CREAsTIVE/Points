@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,10 +10,14 @@ using System.Windows;
 using System.Windows.Controls;
 
 namespace Points.Windows.SignalCreation.Presets; 
+/// <summary>
+/// Base interface for signal generator
+/// </summary>
 public interface IGenerationPreset {
 	public static List<IGenerationPreset> Common { get; } = new() {
 		new Sin(),
-		new RandomWalker()
+		new RandomWalker(),
+		new Line()
 	};
 
 	public string Name { get; }
@@ -21,6 +26,10 @@ public interface IGenerationPreset {
 
 	public interface IParameter {
 		public FrameworkElement Content { get; }
+		/// <summary>
+		/// Set value, that user will input in a Content
+		/// </summary>
+		/// <param name="value"></param>
 		public void SetBindedValue(object? value);
 		public string Name { get; }
 	}
@@ -35,7 +44,7 @@ public interface IGenerationPreset {
 						if (text == "") { 
 							return 0; 
 						}
-						if (float.TryParse(text, out var val)) {
+						if (float.TryParse(text, CultureInfo.InvariantCulture, out var val)) {
 							return val; // TODO: Show red box
 						}
 

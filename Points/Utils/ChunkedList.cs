@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace Points.Utils; 
 public class ChunkedList<T> : IReadOnlyList<T> {
-	private readonly ObservableCollection<List<T>> chunks = new();
+	// Maybe use vlist or something
+	private List<List<T>> chunks = new();
 	public int ChunkCount => chunks.Count;
 
 	private readonly int chunkSize;
@@ -24,7 +25,7 @@ public class ChunkedList<T> : IReadOnlyList<T> {
 	
 	public T this[int index] {
 		get {
-			if (index < 0 || index >= Count) throw new IndexOutOfRangeException();
+			// if (index < 0 || index >= Count) throw new IndexOutOfRangeException();
 			return chunks[index / chunkSize][index % chunkSize];
 		}
 	}
@@ -32,23 +33,27 @@ public class ChunkedList<T> : IReadOnlyList<T> {
 	public int Count => ChunkCount * ChunkSize;
 
 	public void AddLastChunk(List<T> chunk) {
-		if (chunk == null || chunk.Count > chunkSize) throw new ArgumentException("Invalid chunk");
 		chunks.Add(chunk);
 	}
 
 	public void AddFirstChunk(List<T> chunk) {
-		if (chunk == null || chunk.Count > chunkSize) throw new ArgumentException("Invalid chunk");
 		chunks.Insert(0, chunk);
 	}
 
 	public void RemoveLastChunk() {
-		if (chunks.Count == 0) return;
 		chunks.RemoveAt(chunks.Count - 1);
 	}
 
+	public void RemoveLastNChunks(int count) {
+		chunks.RemoveRange(ChunkCount - count, count);
+	}
+
 	public void RemoveFirstChunk() {
-		if (chunks.Count == 0) return;
 		chunks.RemoveAt(0);
+	}
+
+	public void RemoveFirstNChunks(int count) {
+		chunks.RemoveRange(0, count);
 	}
 
 	public void Clear() {

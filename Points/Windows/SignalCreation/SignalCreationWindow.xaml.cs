@@ -22,7 +22,7 @@ namespace Points.Windows.SignalCreation {
 	/// Interaction logic for SignalCreationWindow.xaml
 	/// </summary>
 	public partial class SignalCreationWindow : Window {
-		public event Action OnCreated = delegate { };
+		public event Action<SignalModel> OnCreated = delegate { };
 		public event Action OnCanceled = delegate { };
 		IDbContextFactory<SignalDbContext> dbFactory;
 
@@ -37,10 +37,10 @@ namespace Points.Windows.SignalCreation {
 
 			this.dbFactory = dbFactory;
 		}
-		public void Created() {
+		public void Created(SignalModel signal) {
 			created = true;
 			this.Close();
-			OnCreated();
+			OnCreated(signal);
 		}
 		private void OnClosed(object sender, EventArgs e) {
 			if (!created) OnCanceled();

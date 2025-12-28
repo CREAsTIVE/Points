@@ -24,7 +24,7 @@
                         <TextBlock FontSize="18" Text="{Binding Path=Name}" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Создан: "/>
-                            <TextBlock Text="{Binding Path=CreationTime}" />
+                            <TextBlock Text="{Binding Path=CreationDate}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Выбрать" Command="{Binding DataContext.SelectSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
