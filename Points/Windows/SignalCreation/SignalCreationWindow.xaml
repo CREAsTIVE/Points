@@ -11,6 +11,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <StackPanel>
             <StackPanel>
@@ -47,5 +49,7 @@
             Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" 
             Content="Создать сигнал..." 
             Command="{Binding CreateSignalCommand}"/>
+        <ProgressBar Grid.Row="2" Maximum="{Binding TotalChunks}" Value="{Binding CreationProgress}"/>
+        <TextBlock Grid.Row="3" HorizontalAlignment="Center" Text="{Binding CreationState}"/>
     </Grid>
 </Window>

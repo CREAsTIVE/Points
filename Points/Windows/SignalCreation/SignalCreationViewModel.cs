@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace Points.Windows.SignalCreation; 
 public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> dbFactory, Func<SignalViewWindow> signalViewWindowFactory) : ObservableObject {
@@ -30,12 +32,35 @@ public partial class SignalCreationViewModel(IDbContextFactory<SignalDbContext> 
 	[ObservableProperty]
 	IGenerationPreset selectedPreset = IGenerationPreset.Common[0];
 
+	[ObservableProperty]
+	int creationProgress = 0;
+
+	[ObservableProperty]
+	string creationState = "";
+
+	[ObservableProperty]
+	int totalChunks = 1;
+
 	[RelayCommand]
 	public async Task CreateSignal() {
 		CurrentSignalModel.CreationTime = DateTime.Now;
 		var result = await SignalMetaEntity.Create(CurrentSignalModel.entity, dbFactory);
 		// await CurrentSignalModel.SetChunks(dbFactory, Enumerable.Range(0, CurrentSignalModel.TotalPoints).Select(_ => Random.Shared.NextSingle()*2-1).ToList());
-		await CurrentSignalModel.SetPoints(dbFactory, SelectedPreset.GetPoints((float)CurrentSignalModel.TimeStep, CurrentSignalModel.TotalPoints), CurrentSignalModel.TotalPoints);
+
+		TotalChunks = CurrentSignalModel.TotalChunks;
+		await Task.Run(async () => {
+			CreationState = "Генерация точек";
+			await CurrentSignalModel.SetPoints(dbFactory, SelectedPreset.GetPoints((float)CurrentSignalModel.TimeStep, CurrentSignalModel.TotalPoints), async (amount) => {
+				await Application.Current.Dispatcher.InvokeAsync(() => {
+					CreationProgress = amount;
+					if (CreationProgress == TotalChunks - 1) {
+						CreationState = "Сохранение";
+					}
+				});
+			});
+		});
+
+		CreationState = "Открытие";
 
 		var window = signalViewWindowFactory();
 		((SignalViewViewModel)window.DataContext).SetSignal(new(result));

@@ -41,7 +41,7 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		set => SetProperty(entity.ChunkSize, value, entity, (e, v) => e.ChunkSize = v);
 	}
 
-	public int ChunkAmount => TotalPoints / ChunkSize;
+	public int TotalChunks => TotalPoints / ChunkSize;
 	public int LastChunkAmount => TotalPoints % ChunkSize;
 
 	public async Task<List<float>> GetChunk(IDbContextFactory<SignalDbContext> dbFactory, int chunkID) {
@@ -50,6 +50,7 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 		}
 	}
 
+	/// <returns>Chunk as list of point Y position, <b>without accounting <see cref="TotalPoints"/></b></returns>
 	public async Task<List<float>> GetChunk(SignalDbContext db, int chunkID) {
 		var result = await db.Chunks
 			.Where(chunk => chunk.ChunkID == chunkID && chunk.SignalID == ID)
@@ -72,20 +73,22 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject {
 			.Select(chunk => chunk.Data)
 			.ToListAsync(); // not required?
 
-		// Remove overhead by writing it in plain loop
-		return [..result.Select(chunk => chunk.Chunk(SignalChunkEntity.PointSize).Select(bytes => BitConverter.ToSingle(bytes)).ToList())]; 
+		// TODO: Remove overhead by writing it in plain loop
+		// TODO: Remove points from last chunk if TotalPoints < chunk size
+		return [..result.Select(chunk => chunk.Chunk(SignalChunkEntity.PointSize).Select(bytes => BitConverter.ToSingle(bytes)).ToList())];
 	}
 
+	/// <inheritdoc cref="SetPoints(SignalDbContext, IAsyncEnumerable{float}, Func{int, Task}?)"/>
 	public async Task SetPoints(IDbContextFactory<SignalDbContext> dbContextFactory, IAsyncEnumerable<float> points, Func<int, Task>? chunkSetUpdate = null) {
 		using var db = await dbContextFactory.CreateDbContextAsync();
 		await SetPoints(db, points, chunkSetUpdate);
 	}
 
 	/// <summary>
-	/// Clears and sets all points to a target <paramref name="points"/>
+	/// Clears and sets all points to a <paramref name="points"/>
 	/// </summary>
-	/// <param name="points">Finite point enumerable</param>
-	/// <param name="chunkSetUpdate">get called when new chunk is created with created chunk ID</param>
+	/// <param name="points">Finite point enumerable </param>
+	/// <param name="chunkSetUpdate">Callback, called when new chunk is created with created chunk ID</param>
 	public async Task SetPoints(SignalDbContext db, IAsyncEnumerable<float> points, Func<int, Task>? chunkSetUpdate = null) {
 		db.Chunks.RemoveRange(db.Chunks.Where(c => c.SignalID == ID));
 

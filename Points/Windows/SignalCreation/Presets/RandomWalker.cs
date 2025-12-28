@@ -15,7 +15,7 @@ public class RandomWalker : IGenerationPreset {
 		
 	};
 
-	public IEnumerable<float> GetPoints(float timeStep, int amount) {
+	public async IAsyncEnumerable<float> GetPoints(float timeStep, int amount) {
 		var walker = new ScottPlot.DataGenerators.RandomWalker();
 		for (int i = 0; i < amount; i++) {
 			yield return (float)walker.Next();

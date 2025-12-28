@@ -23,7 +23,7 @@ public class Sin : IGenerationPreset {
 		frequency, phase, amplitude
 	};
 
-	public IEnumerable<float> GetPoints(float timeStep, int amount) {
+	public async IAsyncEnumerable<float> GetPoints(float timeStep, int amount) {
 		for (int ix = 0; ix < amount; ix++) {
 			float x = ix * timeStep;
 

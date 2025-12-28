@@ -18,7 +18,6 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 	ChunkedList<float>? loadedChunks;
 
 	#region leftBorder
-	private double leftBorder = 0;
 	bool leftBorderLock = false;
 	int leftBorderCurrentChunk = 0;
 
@@ -29,40 +28,54 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 		if (signal is null) return;
 		if (LoadedChunks is null) return;
 
-		bool updateChart = false;
+		// + 0.001 for float point error fix
+		int GetNewMin(double value) => (int)Math.Clamp(value / signal.ChunkSize + 0.001, 0, signal.TotalChunks - 1);
+		int newMin = GetNewMin(value); 
 
-		var newMin = (int) Math.Clamp(value / signal.ChunkSize + 0.001, 0, signal.ChunkAmount - 1); // + 0.001 for float point error fix
+		while (newMin < leftBorderCurrentChunk) { // may continue over one frame, need all other checks after
+			var chunk = await Task.Run(() => signal.GetChunk(dbFactory, leftBorderCurrentChunk - 1));
 
-		if (newMin < leftBorderCurrentChunk) {
-			for (int i = newMin; i < leftBorderCurrentChunk; i++) {
-				LoadedChunks.AddFirstChunk(await signal.GetChunk(dbFactory, i));
-			}
-			updateChart = true;
-		} 
-		else if (newMin > leftBorderCurrentChunk) {
+			// Add chunk before
+			LoadedChunks.AddFirstChunk(chunk);
+			leftBorderCurrentChunk--;
+
+			_ = Task.Run(() => {
+				PlotControl.Refresh();
+				if (currentPlot is not null) {
+					currentPlot!.Data.XOffset = newMin * signal.ChunkSize * signal.TimeStep;
+				}
+			});
+
+			newMin = GetNewMin(value); // Recalculate newMin after Task.Run
+		}
+
+		if (newMin > leftBorderCurrentChunk) { // done in one frame
+
+			// removed all chunks before newMin
 			for (int i = leftBorderCurrentChunk; i < newMin; i++) {
 				LoadedChunks.RemoveFirstChunk();
 			}
-			updateChart = true;
-		}
-
-		if (updateChart) {
-			PlotControl.Refresh();
 			leftBorderCurrentChunk = newMin;
-			if (currentPlot is not null) {
-				currentPlot!.Data.XOffset = newMin * signal.ChunkSize * signal.TimeStep;
-			}
+
+			_ = Task.Run(() => {
+				PlotControl.Refresh();
+				if (currentPlot is not null) {
+					currentPlot!.Data.XOffset = newMin * signal.ChunkSize * signal.TimeStep;
+				}
+			});
 		}
 
-		leftBorderLock = false; // better if we do another update, when second update recieved and cancel prev
+		leftBorderLock = false;
+
+		
 	}
 	#endregion
 
 	#region rightBorder
-	private double rightBorder = 0;
 	bool rightBorderLock = false;
 	int rightBorderCurrentChunk = 0;
 
+	// Almost same as UpdateLeftBorder
 	private async Task UpdateRightBorder(double value) {
 		if (rightBorderLock) return;
 		rightBorderLock = true;
@@ -70,25 +83,28 @@ public partial class SignalViewViewModel(IDbContextFactory<SignalDbContext> dbFa
 		if (signal is null) return;
 		if (LoadedChunks is null) return;
 
-		bool updateChart = false;
+		int getNewMax(double value) => (int)Math.Clamp(value / signal.ChunkSize + 1 + 0.001, 0, signal.TotalChunks - 1);
+		int newMax = getNewMax(value);
 
-		var newMax = (int) Math.Clamp(value / signal.ChunkSize + 1 + 0.001, 0, signal.ChunkAmount - 1);
+		while (newMax > rightBorderCurrentChunk) { // TODO: cut rightBorderCurrentChunk if leftBorderCurrentChunk passed it (and vice versa)
+			var chunk = await Task.Run(() => signal.GetChunk(dbFactory, rightBorderCurrentChunk + 1));
 
-		if (newMax > rightBorderCurrentChunk) {
-			for (int i = rightBorderCurrentChunk + 1; i <= newMax; i++) {
-				LoadedChunks.AddLastChunk(await signal.GetChunk(dbFactory, i));
-			}
-			updateChart = true;
-		} else if (newMax < rightBorderCurrentChunk) {
+			LoadedChunks.AddLastChunk(chunk);
+			rightBorderCurrentChunk++;
+
+			_ = Task.Run(PlotControl.Refresh);
+
+			newMax = getNewMax(value);
+		}
+
+		if (newMax < rightBorderCurrentChunk) {
 			for (int i = rightBorderCurrentChunk; i > newMax; i--) {
 				LoadedChunks.RemoveLastChunk();
 			}
-			updateChart = true;
-		}
 
-		if (updateChart) {
-			PlotControl.Refresh();
 			rightBorderCurrentChunk = newMax;
+
+			_ = Task.Run(PlotControl.Refresh);
 		}
 
 		rightBorderLock = false;

@@ -17,7 +17,7 @@ public interface IGenerationPreset {
 
 	public string Name { get; }
 	IEnumerable<IParameter> Parameters { get; }
-	IEnumerable<float> GetPoints(float timeStep, int amount);
+	IAsyncEnumerable<float> GetPoints(float timeStep, int amount);
 
 	public interface IParameter {
 		public FrameworkElement Content { get; }
