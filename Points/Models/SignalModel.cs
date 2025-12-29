@@ -90,6 +90,8 @@ public class SignalModel(SignalMetaEntity entity) : ObservableObject, ISignalMet
 	/// <param name="points">Finite point enumerable </param>
 	/// <param name="chunkSetUpdate">Callback, called when new chunk is created with created chunk ID</param>
 	public async Task SetPoints(SignalDbContext db, IAsyncEnumerable<float> points, Func<int, Task>? chunkSetUpdate = null) {
+		db.SignalsMeta.Attach(this.entity);
+
 		db.Chunks.RemoveRange(db.Chunks.Where(c => c.SignalID == ID));
 
 		int count = 0; // total amount of points added

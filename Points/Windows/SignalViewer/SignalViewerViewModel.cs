@@ -71,4 +71,50 @@ public partial class SignalViewerViewModel : ObservableObject {
 		};
 		window.Show();
 	}
+
+	[RelayCommand]
+	public void MergeSelectedSignal() {
+		var window = signalSelectionWindowFactory();
+		if (SelectedSignal is null) return;
+		var signal1 = SelectedSignal.Signal;
+
+		((SignalSelectionViewModel)window.DataContext).OnSignalSelect = signal2 => {
+			async Task MergeSignals() {
+				var newSignal = new SignalModel(await SignalMetaEntity.Create(new() {
+					Name = $"+({signal1.Name}, {signal2.Name})",
+					TimeStep = signal1.TimeStep, // WARN: We assume that timestep is same
+				}, dbFactory));
+
+				var points1 = (await signal1.GetChunks(dbFactory, 0, signal1.TotalChunks)).SelectMany(p => p);
+				var points2 = (await signal2.GetChunks(dbFactory, 0, signal2.TotalChunks)).SelectMany(p => p);
+
+				await newSignal.SetPoints(dbFactory, points1.ZipNullable(points2).Select(pair => pair.a + pair.b).ToAsyncEnumerable()); // TODO: Hardcoded value, settings for modification
+
+				await Application.Current.Dispatcher.InvokeAsync(() => AddSignal(newSignal));
+			}
+
+			_ = Task.Run(MergeSignals);
+		};
+
+		window.Show();
+	}
+
+	[RelayCommand]
+	public async Task CalculateFFT(SignalModel model) {
+		await Task.Run(async () => {
+			var amplitudes = Utils.FFTUtils.ComputeFFTWithFrequencies(
+				(await model.GetChunks(dbFactory, 0, model.TotalChunks)).SelectMany(e => e).ToList(),
+				1000
+			).Select(v => v.Amplitude).ToList();
+
+			var newSignal = new SignalModel(await SignalMetaEntity.Create(new() {
+				Name = $"БПФ {model.Name}",
+				TimeStep = 1
+			}, dbFactory));
+
+			await newSignal.SetPoints(dbFactory, amplitudes.ToAsyncEnumerable());
+
+			await Application.Current.Dispatcher.InvokeAsync(() => AddSignal(newSignal));
+		});
+	}
 }

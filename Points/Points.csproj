@@ -19,6 +19,7 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" />
     <PackageReference Include="NLog.WPF" Version="1.2.6" />
     <PackageReference Include="ScottPlot.WPF" Version="5.1.57" />
+    <PackageReference Include="System.Linq.Async" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,6 +31,14 @@
                     <TextBlock>Открыть другой сигнал в новом окне</TextBlock>
                 </Button>
             </ToolBar>
+            <ToolBar Header="Модификации">
+                <Button Command="{Binding MergeSelectedSignalCommand}">
+                    <TextBlock>Объеденить выбранный сигнал</TextBlock>
+                </Button>
+                <Button Command="{Binding CalculateFFTCommand}" CommandParameter="{Binding SelectedSignal.Signal}">
+                    <TextBlock>Вычислить БПФ</TextBlock>
+                </Button>
+            </ToolBar>
         </ToolBarTray>
         <Grid>
             <Grid.RowDefinitions>

@@ -29,6 +29,14 @@ public partial class SignalViewViewModel : ObservableObject {
 	ChunkedList<float> loadedChunks;
 	Signal plot;
 
+	public bool IsVisible {
+		get => plot.IsVisible;
+		set {
+			plot.IsVisible = value;
+			plotControl.Refresh();
+		}
+	}
+
 	private readonly WpfPlot plotControl;
 	private readonly IDbContextFactory<SignalDbContext> dbFactory;
 
