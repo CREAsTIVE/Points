@@ -15,9 +15,12 @@ namespace Points.Windows.SignalCreation.Presets;
 /// </summary>
 public interface IGenerationPreset {
 	public static List<IGenerationPreset> Common { get; } = new() {
-		new Sin(),
+		new SineWave(),
 		new RandomWalker(),
-		new Line()
+		new Line(),
+		new SquareWave(),
+		new SawtoothWave(),
+		new TriangleWave()
 	};
 
 	public string Name { get; }

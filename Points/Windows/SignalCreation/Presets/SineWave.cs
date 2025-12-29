@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Points.Windows.SignalCreation.Presets;
 
-public class Sin : IGenerationPreset {
+public class SineWave : IGenerationPreset {
 	public string Name => "Синусоида";
 
 	IGenerationPreset.Parameter<float> frequency = new(1, "Частота") {
