@@ -49,8 +49,9 @@ public partial class SignalViewViewModel : ObservableObject {
 		plot.Data.Period = signal.TimeStep;
 	}
 
-	public void Destroy() {
+	public void RemovePlot() {
 		plotControl.Plot.Remove(plot);
+		plotControl.Refresh();
 	}
 
 	public void OnChartUpdate() {

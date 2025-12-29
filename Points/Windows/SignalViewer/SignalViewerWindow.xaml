@@ -7,7 +7,20 @@
         xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
         Title="SignalViewWindow" Height="450" Width="800">
-
+    <Window.Resources>
+        <ControlTemplate x:Key="SignalPropertyTemplate" TargetType="ContentControl">
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock  
+                    FontWeight="Bold"
+                    Margin="0,0,5,0">
+                    <Run Text="{TemplateBinding Tag}"/>
+                    <Run Text=": "/>
+                </TextBlock>
+                <ContentPresenter Content="{TemplateBinding Content}" 
+                              ContentTemplate="{TemplateBinding ContentTemplate}"/>
+            </StackPanel>
+        </ControlTemplate>
+    </Window.Resources>
     <DockPanel>
         <ToolBarTray DockPanel.Dock="Top" >
             <ToolBar Band="1" BandIndex="1" Header="Сигналы">
@@ -19,6 +32,81 @@
                 </Button>
             </ToolBar>
         </ToolBarTray>
-        <ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="4*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="4*"/>
+            </Grid.ColumnDefinitions>
+            <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding PlotControl, Mode=OneTime}"/>
+            <StackPanel Grid.Row="1" Grid.Column="0">
+                <ListBox VerticalAlignment="Stretch" ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Signal.Name}" FontSize="24"/>
+                                
+                                <ContentControl 
+                                    Template="{StaticResource SignalPropertyTemplate}"
+                                    Tag="Количество точек"
+                                    Content="{Binding Signal.TotalPoints}"/>
+
+                                <ContentControl 
+                                    Template="{StaticResource SignalPropertyTemplate}"
+                                    Tag="Дата создания"
+                                    Content="{Binding Signal.CreationDate}"/>
+
+                                <ContentControl
+                                    Template="{StaticResource SignalPropertyTemplate}"
+                                    Tag="Временной шаг"
+                                    Content="{Binding Signal.TimeStep}"/>
+
+                                <CheckBox IsChecked="{Binding IsVisible}" Content="Показывать"/>
+                                <Button 
+                                    Command="{Binding DataContext.RemoveSignalViewCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                    CommandParameter="{Binding}"
+                                    Content="Выгрузить"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            <ContentControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding SelectedSignal.Signal.Name}" FontSize="24" Margin="0 0 20 0"/>
+
+                        <WrapPanel Grid.Column="1" Orientation="Vertical">
+                            <ContentControl 
+                                Template="{StaticResource SignalPropertyTemplate}"
+                                Tag="Количество точек"
+                                Content="{Binding SelectedSignal.Signal.TotalPoints}"/>
+
+                            <ContentControl 
+                                Template="{StaticResource SignalPropertyTemplate}"
+                                Tag="Дата создания"
+                                Content="{Binding SelectedSignal.Signal.CreationDate}"/>
+
+                            <ContentControl
+                                Template="{StaticResource SignalPropertyTemplate}"
+                                Tag="Временной шаг"
+                                Content="{Binding SelectedSignal.Signal.TimeStep}"/>
+                        </WrapPanel>
+                    </Grid>
+                </Grid>
+            </ContentControl>
+        </Grid>
     </DockPanel>
 </Window>

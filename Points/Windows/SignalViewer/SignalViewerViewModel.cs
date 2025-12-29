@@ -19,6 +19,8 @@ public partial class SignalViewerViewModel : ObservableObject {
 	[ObservableProperty]
 	ObservableCollection<SignalViewViewModel> signals = new();
 
+	[ObservableProperty]
+	SignalViewViewModel? selectedSignal;
 
 	// Bad practice
 	public required Window parentWindow;
@@ -41,11 +43,19 @@ public partial class SignalViewerViewModel : ObservableObject {
 
 	public void AddSignal(SignalModel signal) {
 		Signals.Add(new(signal, PlotControl, dbFactory));
+		if (SelectedSignal is null) {
+			SelectedSignal = Signals[0];
+		}
 	}
 
+	[RelayCommand]
 	public void RemoveSignalView(SignalViewViewModel signalView) {
-		signalView.Destroy();
+		signalView.RemovePlot();
 		Signals.Remove(signalView);
+
+		if (SelectedSignal == signalView) {
+			SelectedSignal = null;
+		}
 	}
 
 	[RelayCommand]
